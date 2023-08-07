@@ -1,0 +1,46 @@
+---
+title: "README"
+output: rmarkdown::github_document
+date: "2023-08-07"
+---
+# PROBLEMA 1 
+```{r}
+library(readxl)
+library(dplyr)
+
+archivo <- "datos_unificados_con_fecha.xlsx"
+datos <- read_excel(archivo)
+
+head(datos)
+summary(datos)
+```
+# PROBLEMA 2
+```{r}
+lista_vectores <- list(
+  c(23,123,23,42,123,34,23),
+  c(212,56,34,56,32,34,56),
+  c(11,3,22,11,53,23,34)
+)
+
+
+calcular_moda <- function(x) {
+  tabla_frec <- table(x)
+  moda <- as.numeric(names(tabla_frec)[tabla_frec == max(tabla_frec)])
+  return(moda)
+}
+
+
+modas <- lapply(lista_vectores, calcular_moda)
+print(modas)
+```
+# PROBLEMA 3
+```{r}
+library(readr)
+
+suppressWarnings({
+datos_SAT = read_delim("/Users/josuer/Documents/Sexto Semestre/Data Wrangling/INE_PARQUE_VEHICULAR_2019.txt", delim="|")
+})
+head(datos_SAT)
+summary(datos_SAT)
+```
+
