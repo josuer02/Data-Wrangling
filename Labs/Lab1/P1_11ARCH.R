@@ -4,6 +4,8 @@ library(lubridate)
 library(dplyr)
 library(readr)
 
+setwd('/Users/josuer/Documents/Sexto Semestre/Data Wrangling/Data-Wrangling/Labs/Lab1')
+
 archivos <- c("01-2018.xlsx","02-2018.xlsx","03-2018.xlsx",
               "04-2018.xlsx","05-2018.xlsx","06-2018.xlsx",
               "07-2018.xlsx","08-2018.xlsx","09-2018.xlsx",
@@ -13,7 +15,7 @@ datos_lista <- lapply(archivos, function(archivo) {
   datos <- read_excel(archivo)
   
   # Verificar y quitar columnas no requeridas
-  columnas_requeridas <- c("COD_VIAJE", "CLIENTE", "UBICACIÓN", "CANTIDAD", "PILOTO", "Q", "CREDITO", "UNIDAD")
+  columnas_requeridas <- c("COD_VIAJE", "CLIENTE", "UBICACION", "CANTIDAD", "PILOTO", "Q", "CREDITO", "UNIDAD")
   columnas_extra <- setdiff(colnames(datos), columnas_requeridas)
   datos <- datos[, !colnames(datos) %in% columnas_extra]
   
