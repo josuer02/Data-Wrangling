@@ -24,16 +24,13 @@ Indicaciones generales:
 
 1.  ¿Qué es una ufunc y por qué debemos de utilizarlas cuando
     programamos trabajando datos?
-
     - Las ufuc son funciones universales que aprovechan la vectorizacion
       para ser mas eficientes asi como otras operaciones matematicas, la
       vectorizacion ayuda ya que puede realizar operaciones dentro de
       arreglos enteros en lugar de estar individualmente.
-
 2.  Es una técnica en programación numérica que amplía los objetos que
     son de menor dimensión para que sean compatibles con los de mayor
     dimensión. Describa cuál es la técnica y de un breve ejemplo en R.
-
     - Esta tecnica es conocida como Broadcasting que permite realizar
       operaciones entre arreglos de distintos tamaños sin tener que
       copiar o modificar lo datos.
@@ -43,18 +40,16 @@ Indicaciones generales:
       - `resultado <- matriz + vector`
       - En este ejemplo el vector se expande a una matriz para poder
         realizar la operacion de suma.
-
 3.  ¿Qué es el axioma de elegibilidad y por qué es útil al momento de
-    hacer análisis de datos? \*El axioma de elegibilidad es util en el
-    analisis de datos para garantizar la relevancia y validez de los
-    resultados al seleccionar casos que sean apropiados para el problema
-    o la pregunta de investigación
-
+    hacer análisis de datos?
+    - El axioma de elegibilidad es util en el analisis de datos para
+      garantizar la relevancia y validez de los resultados al
+      seleccionar casos que sean apropiados para el problema o la
+      pregunta de investigación
 4.  Cuál es la relación entre la granularidad y la agregación de datos?
     Mencione un breve ejemplo. Luego, explique cuál es la granularidad o
     agregación requerida para poder generar un reporte como el
     siguiente:
-
     - La granularidad se refiere a que tan especificos estan nuestros
       datos y la agregacion se dedica a combinar los datos a un nivel
       superior
