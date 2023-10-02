@@ -1,0 +1,206 @@
+---
+title: "Lab 5"
+author: "Josuer"
+date: "2023-10-01"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(lubridate)
+library(readxl)
+library(nycflights13)
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+library(tseries)
+data = read_xlsx("data.xlsx")
+```
+
+## Parte 1 Eclipse
+
+```{r eclipse}
+eclipse = mdy_hms("August 21 2017 18:26:40")
+synodic_months = days(29) + hours(12) + minutes(44) + seconds(3)
+saros_time = 223 * synodic_months
+nuevo_eclipse = eclipse + saros_time
+paste0("El proximo eclipse sera en: ", nuevo_eclipse)
+
+```
+
+## Parte 2 Agrupaciones y operaciones con fechas
+
+
+```{r fechas}
+names(data) = tolower(names(data))
+names(data) = gsub("ó", "o", names(data))
+names(data) = gsub(" ", "_", names(data))
+
+data <- data %>%
+    mutate(fecha_corregida = as.Date(as.numeric(fecha_creacion), origin ="1899-12-30"))
+data <- data %>%
+    mutate(fecha_final_C = dmy(fecha_creacion))
+data <- data %>%
+    mutate(fecha = paste(fecha_corregida,fecha_final_C,sep=""))
+data <- data %>%
+    mutate(fecha = gsub("NA","",fecha))
+data <- data %>%
+    mutate(fecha = ymd(fecha))
+data <- data %>%
+    mutate(fecha_creacion = make_datetime(year(fecha),
+                                      month(fecha),
+                                      day(fecha),
+                                      hour(hora_creacion),
+                                      minute(hora_creacion), 
+                                      second(hora_creacion)))
+
+data <- data %>%
+  select(-c("fecha", "fecha_corregida", "fecha_final_C", "hora_creacion"))
+
+data <- data %>%
+    mutate(fecha_corregida = as.Date(as.numeric(fecha_final), origin ="1899-12-30"))
+data <- data %>%
+    mutate(fecha_final_C = dmy(fecha_final))
+data <- data %>%
+    mutate(fecha = paste(fecha_corregida,fecha_final_C,sep=""))
+data <- data %>%
+    mutate(fecha = gsub("NA","",fecha))
+data <- data %>%
+    mutate(fecha = ymd(fecha))
+data <- data %>%
+    mutate(dia = day(hora_final))
+data <- data %>% 
+  mutate(fecha = case_when(dia == 1 ~ fecha + ddays(x=1),
+                           dia == 31 ~ fecha))
+data <- data %>%
+    mutate(fecha_final = make_datetime(year(fecha),
+                                      month(fecha),
+                                      day(fecha),
+                                      hour(hora_final),
+                                      minute(hora_final), 
+                                      second(hora_final)))
+data <- data %>%
+  select(-c("fecha", "fecha_corregida", "fecha_final_C", "hora_final", "dia"))
+```
+
+### ¿En qué meses existe una mayor cantidad de llamadas por código?
+```{r mayor_cantidad}
+mayor_cantidad = data %>% 
+  mutate(mes = month(fecha_creacion)) %>% 
+  filter(call == 1) %>% 
+  select(mes, cod) %>% 
+  group_by(mes, cod) %>% 
+  summarise(cantidad_llamadas = n()) %>% 
+  arrange(desc(cantidad_llamadas))
+
+mayor_cantidad
+```
+### ¿Qué día de la semana es el más ocupado?
+```{r dia_ocupado}
+dia_ocupado <- data %>% 
+  mutate(Dia = wday(fecha_creacion, label = TRUE, abbr = FALSE)) %>% 
+  group_by(Dia) %>% 
+  summarise(cantidad = n()) %>% 
+  arrange(desc(cantidad)) %>% 
+  head(1)
+dia_ocupado
+```
+### ¿Qué mes es el más ocupado?
+```{r mes_ocupado}
+mes_ocupado <- data %>% 
+  mutate(Mes = month(fecha_creacion)) %>% 
+  group_by(Mes) %>% 
+  summarise(cantidad = n()) %>% 
+  arrange(desc(cantidad)) %>% 
+  head(1)
+mes_ocupado
+
+```
+### ¿Existe una concentración o estacionalidad en la cantidad de llamadas?
+```{r estacionalidad}
+estacionalidad <- data %>% 
+  filter(call == 1) %>% 
+  mutate(Semana = floor_date(fecha_creacion, unit = "week")) %>% 
+  group_by(Semana) %>% 
+  summarise(conteo = n())
+estacionalidad = data.frame(estacionalidad)
+
+#Test de estacionalidad
+kpss.test(estacionalidad[,2], null ="Trend") 
+print("Si hay una estacionalidad en la cantidad de llamadas")
+```
+### ¿Cuántos minutos dura la llamada promedio?
+```{r duracion}
+duracion <- data %>% 
+  filter(call == 1) %>% 
+  summarise(Duracion_Promedio = mean(difftime(fecha_final, fecha_creacion, "minutes")))
+  
+dura = as.numeric(duracion$Duracion_Promedio, units = "mins")
+paste0("Una llamada dura en promedio ", dura, " mins")
+```
+### Realice una tabla de frecuencias con el tiempo de llamada
+```{r tabla}
+tabla_freq <- data %>% 
+  filter(call == 1) %>% 
+  mutate(duracion = (fecha_final - fecha_creacion)) %>% 
+  select(duracion)
+tabla_freq$duracion = round(as.numeric(tabla_freq$duracion)/60)
+tabla  <- as.data.frame(table(cut(tabla_freq$duracion,
+                                  seq(min(tabla_freq$duracion),
+                                      max(tabla_freq$duracion),
+                                      5)
+                                      ))) 
+tabla <- tabla %>% 
+  rename("Tiempo en minutos" = Var1, 
+         "Cantidad de llamadas" = Freq)
+tabla
+```
+## Parte 3 Signo Zodiacal
+```{r Zodiaco}
+obtener_signo_zodiacal <- function(fecha_nacimiento) {
+  mes <- month(fecha_nacimiento)
+  dia <- day(fecha_nacimiento)
+  
+  fechas_signos <- data.frame(
+    signo = c("Aries", "Tauro", "Géminis", "Cáncer", "Leo", "Virgo", "Libra", "Escorpio", "Sagitario", "Capricornio", "Acuario", "Piscis"),
+    inicio = ymd(c("2023-03-21", "2023-04-20", "2023-05-21", "2023-06-21", "2023-07-23", "2023-08-23", "2023-09-23", "2023-10-23", "2023-11-22", "2023-12-22", "2023-01-20", "2023-02-19")),
+    fin = ymd(c("2023-04-19", "2023-05-20", "2023-06-20", "2023-07-22", "2023-08-22", "2023-09-22", "2023-10-22", "2023-11-21", "2023-12-21", "2023-01-19", "2023-02-18", "2023-03-20"))
+  )
+  
+  signo_zodiacal <- fechas_signos$signo[mes == month(fechas_signos$inicio) & dia >= day(fechas_signos$inicio) | mes == month(fechas_signos$fin) & dia <= day(fechas_signos$fin)]
+  
+  if (length(signo_zodiacal) == 0) {
+    return("Fecha de nacimiento no válida.")
+  } else {
+    return(signo_zodiacal)
+  }
+}
+
+# Ejemplo:
+fecha_nacimiento <- ymd("2002-11-01")
+signo <- obtener_signo_zodiacal(fecha_nacimiento)
+cat("Tu signo zodiacal es:", signo, "\n")
+```
+## Parte 4 Flights
+```{r vuelos}
+
+flights$dep_datetime <- with(flights, ymd_hm(sprintf("%04d%02d%02d%02d%02d", year, month, day, dep_time %/% 100, dep_time %% 100)))
+flights$arr_datetime <- with(flights, ymd_hm(sprintf("%04d%02d%02d%02d%02d", year, month, day, arr_time %/% 100, arr_time %% 100)))
+flights$sched_dep_datetime <- with(flights, ymd_hm(sprintf("%04d%02d%02d%02d%02d", year, month, day, sched_dep_time %/% 100, sched_dep_time %% 100)))
+flights$sched_arr_datetime <- with(flights, ymd_hm(sprintf("%04d%02d%02d%02d%02d", year, month, day, sched_arr_time %/% 100, sched_arr_time %% 100)))
+
+# Visualizar las nuevas columnas
+head(flights[c("dep_datetime", "arr_datetime", "sched_dep_datetime", "sched_arr_datetime")])
+
+
+
+```
+```{r delay en segundos}
+flights <- flights %>%
+  mutate(
+    delay_total = (dep_datetime - sched_dep_datetime) + (arr_datetime - sched_arr_datetime)
+  )
+
+# Visualizar las primeras filas de la columna delay_total
+head(flights %>% select(dep_datetime, arr_datetime, sched_dep_datetime, sched_arr_datetime, delay_total))
+
+```
